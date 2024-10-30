@@ -29,7 +29,7 @@ function AddJobApplication() {
             ]),
             date: z.date(),
         }),
-        resume: z.string(),
+        resumeId: z.string(),
     });
 
     const { register, handleSubmit, control } = useForm({
@@ -41,7 +41,7 @@ function AddJobApplication() {
                 date: new Date(),
             },
             jobOfferLink: '',
-            resume: '',
+            resumeId: '',
         },
     });
 
@@ -86,7 +86,7 @@ function AddJobApplication() {
             />
             <Controller
                 control={control}
-                name="resume"
+                name="resumeId"
                 render={({ field: { onChange, value } }) => (
                     <Select
                         onValueChange={onChange}

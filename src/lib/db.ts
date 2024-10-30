@@ -6,6 +6,7 @@ export interface JobApplication {
     company: string;
     jobOfferLink: string;
     statusHistory: { status: keyof typeof JOB_APPLICATION_STATUS; date: Date }[];
+    resumeId: string;
 }
 
 export interface Resume {
@@ -21,6 +22,6 @@ export const db = new Dexie('JobApplicationDatabase') as Dexie & {
 };
 
 db.version(1).stores({
-    jobApplications: '++id, company, jobOfferLink, statusHistory',
+    jobApplications: '++id, company, jobOfferLink, statusHistory, resumeId',
     resumes: '++id, name, sha256, file',
 });

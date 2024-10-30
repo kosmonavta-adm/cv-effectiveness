@@ -4,7 +4,6 @@ import { z } from 'zod';
 import Input from '@/ui/Input';
 import Button from '@/ui/Button';
 import { db } from '@/lib/db';
-import { InputFile } from '@/ui/InputFile';
 
 type EditJobApplicationProps = {
     onClose: () => void;
@@ -25,7 +24,6 @@ function UploadResume({ onClose: handleClose }: EditJobApplicationProps) {
     });
 
     const handleSuccessSubmit = (formData: z.infer<typeof uploadResumeSchema>) => {
-        console.log('🚀 ~ handleSuccessSubmit ~ formData:', formData);
         const fileReader = new FileReader();
         if (formData.resume === null) return;
         fileReader.readAsArrayBuffer(formData.resume[0]);
@@ -49,11 +47,11 @@ function UploadResume({ onClose: handleClose }: EditJobApplicationProps) {
             onSubmit={handleSubmit(handleSuccessSubmit)}
         >
             <Input
-                label="Name"
+                label={{ name: 'Name', required: true }}
                 {...register('name')}
             />
             <Input
-                label="Resume"
+                label={{ name: 'Resume', required: true }}
                 type="file"
                 {...register('resume')}
             />
