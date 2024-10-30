@@ -70,7 +70,7 @@ type SelectProps = {
     children: ReactNode;
     label?: {
         name: ReactNode;
-        className?: string;
+        required?: boolean;
     };
     className?: string;
     placeholder?: ReactNode;
@@ -80,14 +80,20 @@ type SelectProps = {
 export const Select = forwardRef<HTMLDivElement, SelectProps>(
     ({ children, label, className, placeholder, error, ...props }, ref) => {
         const id = useId();
-        const isLabelGiven = label !== undefined;
 
         return (
             <div
                 className={cxTw('flex w-full flex-col gap-2')}
                 ref={ref}
             >
-                {isLabelGiven && <Label htmlFor={id}>{label.name}</Label>}
+                {label && (
+                    <Label
+                        required={label?.required ?? false}
+                        htmlFor={id}
+                    >
+                        {label.name}
+                    </Label>
+                )}
                 <SelectRoot {...props}>
                     <SelectTrigger
                         className={className}

@@ -10,8 +10,11 @@ import {
     JOB_APPLICATION_STATUS,
     JOB_APPLICATION_STATUS_TRANSLATION,
 } from '@/features/job_applications/_jobApplications_utils';
+import { useLiveQuery } from 'dexie-react-hooks';
 
 function AddJobApplication() {
+    const resumes = useLiveQuery(() => db.resumes.toArray());
+
     const resumeFormSchema = z.object({
         company: z.string(),
         jobOfferLink: z.string(),
@@ -26,6 +29,7 @@ function AddJobApplication() {
             ]),
             date: z.date(),
         }),
+        resume: z.string(),
     });
 
     const { register, handleSubmit, control } = useForm({
@@ -37,6 +41,7 @@ function AddJobApplication() {
                 date: new Date(),
             },
             jobOfferLink: '',
+            resume: '',
         },
     });
 
@@ -51,12 +56,12 @@ function AddJobApplication() {
             onSubmit={handleSubmit(handleSuccessSubmit)}
         >
             <Input
-                label="Company name"
+                label={{ name: 'Company name', required: true }}
                 {...register('company')}
             />
             <Input
                 {...register('jobOfferLink')}
-                label="Link to job offer"
+                label={{ name: 'Link to job offer' }}
             />
 
             <Controller
@@ -66,7 +71,7 @@ function AddJobApplication() {
                     <Select
                         onValueChange={onChange}
                         value={value}
-                        label={{ name: 'Status' }}
+                        label={{ name: 'Status', required: true }}
                     >
                         {Object.values(JOB_APPLICATION_STATUS).map((status) => (
                             <SelectItem
@@ -81,12 +86,33 @@ function AddJobApplication() {
             />
             <Controller
                 control={control}
+                name="resume"
+                render={({ field: { onChange, value } }) => (
+                    <Select
+                        onValueChange={onChange}
+                        value={value}
+                        label={{ name: 'Resume', required: true }}
+                    >
+                        {resumes?.map((resume) => (
+                            <SelectItem
+                                key={resume.id}
+                                value={String(resume.id)}
+                            >
+                                {resume.name}
+                            </SelectItem>
+                        ))}
+                    </Select>
+                )}
+            />
+            <Controller
+                control={control}
                 name="statusHistory.date"
                 render={({ field: { onChange, value } }) => (
                     <DayPicker
                         onSelect={onChange}
                         selected={value}
                         className="mx-auto"
+                        label={{ name: 'Application date', required: true }}
                     />
                 )}
             />
