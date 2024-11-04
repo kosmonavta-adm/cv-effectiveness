@@ -16,7 +16,7 @@ function AddJobApplication() {
     const resumes = useLiveQuery(() => db.resumes.toArray());
 
     const resumeFormSchema = z.object({
-        company: z.string(),
+        company: z.string().min(1),
         jobOfferLink: z.string(),
         statusHistory: z.object({
             status: z.enum([
@@ -58,13 +58,15 @@ function AddJobApplication() {
             fileReader.addEventListener('loadend', async (e) => {
                 if (e.target === null || e.target.result === null || typeof e.target.result === 'string') return;
 
+                const filename = resume[0].name;
+
                 const hashBuffer = await window.crypto.subtle.digest('SHA-256', e.target.result);
 
                 const sha256 = Array.from(new Uint8Array(hashBuffer))
                     .map((b) => b.toString(16).padStart(2, '0'))
                     .join('');
 
-                const resumeId = await db.resumes.add({ name: 'x', sha256, file: e.target.result });
+                const resumeId = await db.resumes.add({ name: filename, sha256, file: e.target.result });
 
                 db.jobApplications.add({ ...restFormData, resumeId: String(resumeId), statusHistory: [statusHistory] });
             });
@@ -107,36 +109,39 @@ function AddJobApplication() {
                     </Select>
                 )}
             />
-            <div className="grid grid-cols-[1fr,min-content,1fr] gap-4">
-                <Controller
-                    control={control}
-                    name="resumeId"
-                    render={({ field: { onChange, value } }) => (
-                        <Select
-                            onValueChange={onChange}
-                            value={value}
-                            label={{ name: 'Already uploaded resumes', required: true }}
-                        >
-                            {resumes?.map((resume) => (
-                                <SelectItem
-                                    key={resume.id}
-                                    value={String(resume.id)}
-                                >
-                                    {resume.name}
-                                </SelectItem>
-                            ))}
-                        </Select>
-                    )}
-                />
-                <div className="flex h-10 items-center self-end">
-                    <hr /> or <hr />
+            <div className="grid gap-2">
+                <div className="grid grid-cols-[1fr,min-content,1fr] items-end gap-4">
+                    <Controller
+                        control={control}
+                        name="resumeId"
+                        render={({ field: { onChange, value } }) => (
+                            <Select
+                                onValueChange={onChange}
+                                value={value}
+                                label={{ name: 'Resume', required: true }}
+                            >
+                                {resumes?.map((resume) => (
+                                    <SelectItem
+                                        key={resume.id}
+                                        value={String(resume.id)}
+                                    >
+                                        {resume.name}
+                                    </SelectItem>
+                                ))}
+                            </Select>
+                        )}
+                    />
+                    <div className="flex h-10 items-center self-end">
+                        <hr /> or <hr />
+                    </div>
+                    <Input
+                        type="file"
+                        {...register('resume')}
+                    />
                 </div>
-
-                <Input
-                    label={{ name: 'Upload resume' }}
-                    type="file"
-                    {...register('resume')}
-                />
+                <p className="text-sm text-neutral-600">
+                    Choose resume from already uploaded files or upload new resume
+                </p>
             </div>
 
             <Controller

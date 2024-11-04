@@ -148,7 +148,11 @@ const JobApplicationsList = () => {
                     </div>
                 ))}
             </div>
-            <div className="h-full max-h-[512px]">
+            <div className="mt-12 flex h-full max-h-[512px] flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                    <p className="text-lg font-bold">Interview invitations</p>
+                    <p className="text-sm text-neutral-800">Result are shown in normalized scale from 0 to 1</p>
+                </div>
                 <ResponsiveContainer
                     width="100%"
                     height="100%"
@@ -159,18 +163,12 @@ const JobApplicationsList = () => {
                         data={Array.from(
                             calculateResumeEffectiveness(jobApplications, JOB_APPLICATION_STATUS.INTERVIEW).values()
                         )}
-                        margin={{
-                            top: 5,
-                            right: 30,
-                            left: 20,
-                            bottom: 5,
-                        }}
+                        margin={{ bottom: 16 }}
                     >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis />
                         <Tooltip />
-
                         <Bar
                             dataKey="normalized"
                             fill="#8884d8"
