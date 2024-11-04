@@ -29,11 +29,10 @@ const DayPicker = ({ label, ...props }: DayPickerProps) => {
                     weeks: 'flex flex-col gap-1',
                     week: 'grid grid-cols-7 gap-1',
                     day: 'flex items-center justify-center',
-                    day_button:
-                        'flex aria-disabled:cursor-default p-1 cursor-pointer aria-selected:hover:bg-opacity-80',
+                    day_button: 'flex aria-disabled:cursor-not-allowed p-1 aria-selected:hover:bg-opacity-80',
                     selected: 'bg-blue-400 [&>*]:text-white',
                     outside: 'day-outside opacity-50 aria-selected:bg-accent/50 aria-selected:opacity-30',
-                    disabled: '[&>*]:text-neutral-100',
+                    disabled: '[&>*]:text-neutral-400',
                     hidden: 'invisible',
                 }}
                 components={{

@@ -30,9 +30,10 @@ function AddJobApplication() {
             date: z.date(),
         }),
         resumeId: z.string(),
+        resume: z.instanceof(FileList).nullable(),
     });
 
-    const { register, handleSubmit, control } = useForm({
+    const { register, handleSubmit, control, reset } = useForm({
         resolver: zodResolver(resumeFormSchema),
         defaultValues: {
             company: '',
@@ -42,12 +43,34 @@ function AddJobApplication() {
             },
             jobOfferLink: '',
             resumeId: '',
+            resume: null,
         },
     });
 
     const handleSuccessSubmit = (formData: z.infer<typeof resumeFormSchema>) => {
-        const { statusHistory, ...restFormData } = formData;
-        db.jobApplications.add({ ...restFormData, statusHistory: [statusHistory] });
+        const { statusHistory, resume, ...restFormData } = formData;
+        const fileReader = new FileReader();
+        if (resume === null) {
+            db.jobApplications.add({ ...restFormData, statusHistory: [statusHistory] });
+        } else {
+            fileReader.readAsArrayBuffer(resume[0]);
+
+            fileReader.addEventListener('loadend', async (e) => {
+                if (e.target === null || e.target.result === null || typeof e.target.result === 'string') return;
+
+                const hashBuffer = await window.crypto.subtle.digest('SHA-256', e.target.result);
+
+                const sha256 = Array.from(new Uint8Array(hashBuffer))
+                    .map((b) => b.toString(16).padStart(2, '0'))
+                    .join('');
+
+                const resumeId = await db.resumes.add({ name: 'x', sha256, file: e.target.result });
+
+                db.jobApplications.add({ ...restFormData, resumeId: String(resumeId), statusHistory: [statusHistory] });
+            });
+        }
+
+        reset();
     };
 
     return (
@@ -84,26 +107,38 @@ function AddJobApplication() {
                     </Select>
                 )}
             />
-            <Controller
-                control={control}
-                name="resumeId"
-                render={({ field: { onChange, value } }) => (
-                    <Select
-                        onValueChange={onChange}
-                        value={value}
-                        label={{ name: 'Resume', required: true }}
-                    >
-                        {resumes?.map((resume) => (
-                            <SelectItem
-                                key={resume.id}
-                                value={String(resume.id)}
-                            >
-                                {resume.name}
-                            </SelectItem>
-                        ))}
-                    </Select>
-                )}
-            />
+            <div className="grid grid-cols-[1fr,min-content,1fr] gap-4">
+                <Controller
+                    control={control}
+                    name="resumeId"
+                    render={({ field: { onChange, value } }) => (
+                        <Select
+                            onValueChange={onChange}
+                            value={value}
+                            label={{ name: 'Already uploaded resumes', required: true }}
+                        >
+                            {resumes?.map((resume) => (
+                                <SelectItem
+                                    key={resume.id}
+                                    value={String(resume.id)}
+                                >
+                                    {resume.name}
+                                </SelectItem>
+                            ))}
+                        </Select>
+                    )}
+                />
+                <div className="flex h-10 items-center self-end">
+                    <hr /> or <hr />
+                </div>
+
+                <Input
+                    label={{ name: 'Upload resume' }}
+                    type="file"
+                    {...register('resume')}
+                />
+            </div>
+
             <Controller
                 control={control}
                 name="statusHistory.date"

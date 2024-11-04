@@ -3,13 +3,28 @@ import Checkbox from '@/ui/Checkbox';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Fragment, useState } from 'react';
 import Button from '@/ui/Button';
-import { JOB_APPLICATION_STATUS_TRANSLATION } from '@/features/job_applications/_jobApplications_utils';
+import {
+    calculateResumeEffectiveness,
+    JOB_APPLICATION_STATUS,
+    JOB_APPLICATION_STATUS_TRANSLATION,
+} from '@/features/job_applications/_jobApplications_utils';
 import { formatDate } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTrigger } from '@/ui/Dialog';
 import ChangeJobApplicationStatus from '@/features/job_applications/ChangeJobApplicationStatus';
 import EditJobApplication from '@/features/job_applications/EditJobApplication';
 import ConfirmDeleteJobApplication from '@/features/job_applications/ConfirmDeleteJobApplication';
 import { useToggle } from '@/lib/hooks/useToggle';
+import {
+    BarChart,
+    Bar,
+    Rectangle,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    ReferenceLine,
+} from 'recharts';
 
 const JobApplicationsList = () => {
     const jobApplications = useLiveQuery(() => db.jobApplications.toArray());
@@ -47,27 +62,28 @@ const JobApplicationsList = () => {
         });
     };
 
+    if (jobApplications === undefined) return;
+
     return (
         <div>
             <div className="sticky top-0 flex h-12 items-center gap-8 border border-b-0 bg-neutral-100 p-4">
                 {selectedJobs.size === 1 && (
-                    <Dialog
-                        onOpenChange={toggleIsEditDialogOpen}
-                        open={isEditDialogOpen}
-                    >
-                        <DialogTrigger asChild>
-                            <Button variant="ghost">Edit</Button>
-                        </DialogTrigger>
-                        <DialogContent title="Edit job application">
-                            <EditJobApplication
-                                jobApplicationToEdit={selectedJobs.entries().next().value?.[1] as JobApplication}
-                                onClose={toggleIsEditDialogOpen}
-                            />
-                        </DialogContent>
-                    </Dialog>
-                )}
-                {selectedJobs.size > 0 && (
                     <Fragment>
+                        <Dialog
+                            onOpenChange={toggleIsEditDialogOpen}
+                            open={isEditDialogOpen}
+                        >
+                            <DialogTrigger asChild>
+                                <Button variant="ghost">Edit</Button>
+                            </DialogTrigger>
+                            <DialogContent title="Edit job application">
+                                <EditJobApplication
+                                    jobApplicationToEdit={selectedJobs.values().next().value as JobApplication}
+                                    onClose={toggleIsEditDialogOpen}
+                                />
+                            </DialogContent>
+                        </Dialog>
+
                         <Dialog
                             open={isChangeStatusDialogOpen}
                             onOpenChange={toggleIsChangeStatusDialogOpen}
@@ -77,26 +93,28 @@ const JobApplicationsList = () => {
                             </DialogTrigger>
                             <DialogContent title="Change job application status">
                                 <ChangeJobApplicationStatus
-                                    jobApplicationsToEdit={Array.from(selectedJobs.values())}
+                                    jobApplicationToEdit={selectedJobs.values().next().value as JobApplication}
                                     onClose={toggleIsChangeStatusDialogOpen}
                                 />
                             </DialogContent>
                         </Dialog>
-                        <Dialog
-                            open={isDeleteDialogOpen}
-                            onOpenChange={toggleIsDeleteDialogOpen}
-                        >
-                            <DialogTrigger asChild>
-                                <Button variant="ghost">Delete</Button>
-                            </DialogTrigger>
-                            <DialogContent title="Delete job application">
-                                <ConfirmDeleteJobApplication
-                                    jobApplicationsToDelete={Array.from(selectedJobs.values())}
-                                    onClose={toggleIsDeleteDialogOpen}
-                                />
-                            </DialogContent>
-                        </Dialog>
                     </Fragment>
+                )}
+                {selectedJobs.size > 1 && (
+                    <Dialog
+                        open={isDeleteDialogOpen}
+                        onOpenChange={toggleIsDeleteDialogOpen}
+                    >
+                        <DialogTrigger asChild>
+                            <Button variant="ghost">Delete</Button>
+                        </DialogTrigger>
+                        <DialogContent title="Delete job application">
+                            <ConfirmDeleteJobApplication
+                                jobApplicationsToDelete={Array.from(selectedJobs.values())}
+                                onClose={toggleIsDeleteDialogOpen}
+                            />
+                        </DialogContent>
+                    </Dialog>
                 )}
             </div>
             <div className="grid grid-cols-[64px,repeat(2,minmax(0,1fr)),repeat(2,256px)] grid-rows-[min-content] border">
@@ -129,6 +147,47 @@ const JobApplicationsList = () => {
                         <div>{formatDate(jobApplication.statusHistory.at(-1)?.date)}</div>
                     </div>
                 ))}
+            </div>
+            <div className="h-full max-h-[512px]">
+                <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                >
+                    <BarChart
+                        width={500}
+                        height={300}
+                        data={Array.from(
+                            calculateResumeEffectiveness(jobApplications, JOB_APPLICATION_STATUS.INTERVIEW).values()
+                        )}
+                        margin={{
+                            top: 5,
+                            right: 30,
+                            left: 20,
+                            bottom: 5,
+                        }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+
+                        <Bar
+                            dataKey="normalized"
+                            fill="#8884d8"
+                            activeBar={
+                                <Rectangle
+                                    fill="pink"
+                                    stroke="blue"
+                                />
+                            }
+                        />
+                        <ReferenceLine
+                            x="30.10"
+                            label="new cv"
+                            stroke="red"
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
             </div>
         </div>
     );

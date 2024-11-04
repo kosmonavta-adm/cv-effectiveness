@@ -24,7 +24,8 @@
 		"react-day-picker": "^9.2.0",
 		"react-dom": "^18.3.1",
 		"react-hook-form": "^7.53.1",
-		"recharts": "^2.12.7",
+		"recharts": "^2.13.2",
+		"remove": "^0.1.5",
 		"tailwind-merge": "^2.5.4",
 		"zod": "^3.23.8"
 	},

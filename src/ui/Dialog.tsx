@@ -9,7 +9,7 @@ export const DialogContent = forwardRef<ElementRef<typeof DialogPrimitive.Conten
         <DialogPrimitive.Portal>
             <DialogPrimitive.Overlay className="fixed inset-0 z-40 h-screen w-screen bg-neutral-800 opacity-50" />
             <DialogPrimitive.Content
-                className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 bg-white p-12"
+                className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-xl translate-x-[-50%] translate-y-[-50%] gap-4 bg-white p-12"
                 {...props}
                 ref={ref}
             >

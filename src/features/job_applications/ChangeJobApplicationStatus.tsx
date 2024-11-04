@@ -8,13 +8,14 @@ import {
     JOB_APPLICATION_STATUS,
     JOB_APPLICATION_STATUS_TRANSLATION,
 } from '@/features/job_applications/_jobApplications_utils';
+import DayPicker from '@/ui/DayPicker';
 
 type EditJobApplicationStatusProps = {
-    jobApplicationsToEdit: JobApplication[];
+    jobApplicationToEdit: JobApplication;
     onClose: () => void;
 };
 
-function ChangeJobApplicationStatus({ jobApplicationsToEdit, onClose: handleClose }: EditJobApplicationStatusProps) {
+function ChangeJobApplicationStatus({ jobApplicationToEdit, onClose: handleClose }: EditJobApplicationStatusProps) {
     const resumeFormSchema = z.object({
         status: z.enum([
             JOB_APPLICATION_STATUS.APPLIED,
@@ -24,30 +25,21 @@ function ChangeJobApplicationStatus({ jobApplicationsToEdit, onClose: handleClos
             JOB_APPLICATION_STATUS.OFFER_ACCEPTED,
             JOB_APPLICATION_STATUS.OFFER_DECLINED,
         ]),
+        date: z.date(),
     });
 
     const { handleSubmit, control } = useForm({
         resolver: zodResolver(resumeFormSchema),
         defaultValues: {
             status: JOB_APPLICATION_STATUS.APPLIED,
+            date: new Date(),
         },
     });
 
     const handleSuccessSubmit = (formData: z.infer<typeof resumeFormSchema>) => {
-        const aplicationsToUpdate = jobApplicationsToEdit.map((jobApplicationsToEdit) => ({
-            key: jobApplicationsToEdit.id,
-            changes: {
-                statusHistory: [
-                    ...jobApplicationsToEdit.statusHistory,
-                    {
-                        status: formData.status,
-                        date: new Date(),
-                    },
-                ],
-            },
-        }));
-
-        db.jobApplications.bulkUpdate(aplicationsToUpdate);
+        db.jobApplications.update(jobApplicationToEdit.id, {
+            statusHistory: [...jobApplicationToEdit.statusHistory, formData],
+        });
 
         handleClose();
     };
@@ -65,15 +57,33 @@ function ChangeJobApplicationStatus({ jobApplicationsToEdit, onClose: handleClos
                         onValueChange={onChange}
                         value={value}
                     >
-                        {Object.values(JOB_APPLICATION_STATUS).map((status) => (
-                            <SelectItem
-                                key={status}
-                                value={status}
-                            >
-                                {JOB_APPLICATION_STATUS_TRANSLATION[status]}
-                            </SelectItem>
-                        ))}
+                        {Object.values(JOB_APPLICATION_STATUS)
+                            .filter((status) =>
+                                jobApplicationToEdit.statusHistory.every((statusEntry) => statusEntry.status !== status)
+                            )
+                            .map((status) => (
+                                <SelectItem
+                                    key={status}
+                                    value={status}
+                                >
+                                    {JOB_APPLICATION_STATUS_TRANSLATION[status]}
+                                </SelectItem>
+                            ))}
                     </Select>
+                )}
+            />
+
+            <Controller
+                control={control}
+                name="date"
+                render={({ field: { onChange, value } }) => (
+                    <DayPicker
+                        onSelect={onChange}
+                        selected={value}
+                        className="mx-auto"
+                        label={{ name: 'Application date', required: true }}
+                        disabled={{ before: jobApplicationToEdit.statusHistory.at(-1)!.date }}
+                    />
                 )}
             />
 
